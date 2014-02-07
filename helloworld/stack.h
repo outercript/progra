@@ -19,10 +19,11 @@ typedef struct{
     int position;
     int maxSize;
     int elemSize;
+    void (*freefn)(void *);
 } Stack;
 
 
-void StackNew(Stack *s, int block_size);
+void StackNew(Stack *s, int block_size, void (*freefn)(void *));
 void StackDispose(Stack *s);
 void StackPush(Stack *s, void *value);
 void StackPop(Stack *s, void *address);
