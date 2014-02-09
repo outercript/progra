@@ -2,7 +2,8 @@
 #define _vector_
 
 typedef enum {
-  false, true
+  false,
+  true
 } bool;
 
 
@@ -11,18 +12,23 @@ typedef void (*VectorMapFunction)(void *elemAddr, void *auxData);
 typedef void (*VectorFreeFunction)(void *elemAddr);
 
 typedef struct {
-  
+    int elemSize;
+    int lastElem;
+    int initialLength;
+    int currentLength;
+    void *elements;
+    void (*freefn)(void *);
 } vector;
 
-/** 
+/**
  * Function: VectorNew
  * Usar: vector myFriends;
  *        VectorNew(&myFriends, sizeof(char *), StringFree, 10);
  * -------------------
- * 
+ *
  * initialAllocation especifica el tamanno inicial del vector,
  * tambien indica en cuanto se debe aumentar el vector cada vez que se necesite.
- * El tamanno reservado indica cuantos espacios estan disponibles, mientras que 
+ * El tamanno reservado indica cuantos espacios estan disponibles, mientras que
  * la logitud indica cuanto esta ocupado
  * Si este valor es menor que cero un assert debe ocurrir. Si es igual a cero el default valor de
  * 4 debe utilizarce
@@ -32,11 +38,11 @@ void VectorNew(vector *v, int elemSize, VectorFreeFunction freefn, int initialAl
 void VectorDispose(vector *v);
 int VectorLength(const vector *v);
 void *VectorNth(const vector *v, int position);
-					  
+
 /**
  * Function: VectorInsert
  * ----------------------
- * Un assert debe fallar si n es menor que 0 mayour que la longitud 
+ * Un assert debe fallar si n es menor que 0 mayour que la longitud
  */
 
 void VectorInsert(vector *v, const void *elemAddr, int position);
