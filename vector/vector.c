@@ -74,10 +74,20 @@ void VectorDelete(vector *v, int position)
 }
 
 void VectorSort(vector *v, VectorCompareFunction compare)
-{}
+{
+    qsort(v->elements, v->lastElem, v->elemSize, compare);
+}
 
 void VectorMap(vector *v, VectorMapFunction mapFn, void *auxData)
-{}
+{
+    int i;
+    void *elemAddr;
+    for (i=0; i < VectorLength(v); i++)
+    {
+        elemAddr = VectorNth(v, i);
+        mapFn(elemAddr, auxData);
+    }
+}
 
 static const int kNotFound = -1;
 int VectorSearch(const vector *v, const void *key, VectorCompareFunction searchFn, int startIndex, bool isSorted)
