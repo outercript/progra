@@ -19,10 +19,8 @@ void VectorDispose(vector *v)
 {
     int i;
     void *elemAddr;
-    if(v->freefn != NULL)
-    {
-        for(i=0; i < v->lastElem; i++)
-        {
+    if(v->freefn != NULL) {
+        for(i=0; i < v->lastElem; i++) {
             elemAddr = (char *)v->elements + (i * v->elemSize);
             v->freefn(elemAddr);
         }
@@ -57,8 +55,7 @@ void VectorInsert(vector *v, const void *elemAddr, int position)
 void VectorAppend(vector *v, const void *elemAddr)
 {
     // Increase vector length if maximum has been reached
-    if (v->lastElem == v->currentLength)
-    {
+    if (v->lastElem == v->currentLength) {
         VectorExpand(v);
     }
 
@@ -82,8 +79,7 @@ void VectorMap(vector *v, VectorMapFunction mapFn, void *auxData)
 {
     int i;
     void *elemAddr;
-    for (i=0; i < VectorLength(v); i++)
-    {
+    for (i=0; i < VectorLength(v); i++) {
         elemAddr = VectorNth(v, i);
         mapFn(elemAddr, auxData);
     }
@@ -94,13 +90,11 @@ int VectorSearch(const vector *v, const void *key, VectorCompareFunction searchF
     void *elemAddr = NULL;
     void *baseAddr = (char *)v->elements + (startIndex * v->elemSize);
 
-    if (isSorted == true)
-    {
+    if (isSorted == true) {
         elemAddr = bsearch(key, baseAddr, v->lastElem, v->elemSize, searchFn);
     }
 
-    if (elemAddr != NULL)
-    {
+    if (elemAddr != NULL) {
         return ((char *)elemAddr - (char *)v->elements) / v->elemSize;
     }
     return kNotFound;
@@ -141,8 +135,7 @@ int main()
 
     // Test filling up the Vector
     printf("Test Fill Vector\n");
-    for (i=0; i<length; i++)
-    {
+    for (i=0; i<length; i++) {
         d = 1.5*i;
         VectorAppend(&test, &d);
     }
