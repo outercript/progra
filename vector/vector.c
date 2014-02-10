@@ -33,7 +33,7 @@ void VectorDispose(vector *v)
 
 int VectorLength(const vector *v)
 {
-    return v->currentLength;
+    return v->lastElem;
 }
 
 void *VectorNth(const vector *v, int position)
