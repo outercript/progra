@@ -21,7 +21,7 @@ void VectorDispose(vector *v)
     void *elemAddr;
     if(v->freefn != NULL) {
         for(i=0; i < v->lastElem; i++) {
-            elemAddr = (char *)v->elements + (i * v->elemSize);
+            elemAddr = VectorNth(v, i);
             v->freefn(elemAddr);
         }
     }
@@ -49,17 +49,15 @@ void VectorReplace(vector *v, const void *elemAddr, int position)
 
 void VectorInsert(vector *v, const void *elemAddr, int position)
 {
-
+    // TODO: Implement insert function
 }
 
 void VectorAppend(vector *v, const void *elemAddr)
 {
-    // Increase vector length if maximum has been reached
     if (v->lastElem == v->currentLength) {
         VectorExpand(v);
     }
 
-    // Copy the object and increase count
     VectorReplace(v, elemAddr, v->lastElem);
     v->lastElem++;
 }
@@ -68,6 +66,7 @@ void VectorDelete(vector *v, int position)
 {
     void *elemAddr;
     elemAddr = VectorNth(v, position);
+    // TODO: Implement delete function
 }
 
 void VectorSort(vector *v, VectorCompareFunction compare)
@@ -92,6 +91,8 @@ int VectorSearch(const vector *v, const void *key, VectorCompareFunction searchF
 
     if (isSorted == true) {
         elemAddr = bsearch(key, baseAddr, v->lastElem, v->elemSize, searchFn);
+    } else {
+        // TODO: Implement linear search
     }
 
     if (elemAddr != NULL) {
@@ -102,7 +103,6 @@ int VectorSearch(const vector *v, const void *key, VectorCompareFunction searchF
 
 void VectorExpand(vector *v)
 {
-    printf(" Expanding vector from %d to %d\n",v->currentLength, v->currentLength+v->initialLength);
     v->currentLength += v->initialLength;
     v->elements = realloc(v->elements, v->currentLength * v->elemSize);
     assert(v->elements != NULL);
@@ -127,11 +127,11 @@ int main()
 {
     int i, length;
     double d;
-    void *p;
 
     length = 5;
     vector test;
     VectorNew(&test, sizeof(double), NULL, length);
+
 
     // Test filling up the Vector
     printf("Test Fill Vector\n");
@@ -141,11 +141,13 @@ int main()
     }
     VectorMap(&test, (VectorMapFunction)print_double, NULL);
 
+
     // Replace test
     printf("\n\nTest Replace Element\n");
     d = 7.23;
     VectorReplace(&test, &d, 3);
     VectorMap(&test, (VectorMapFunction)print_double, NULL);
+
 
     // Append when full test
     printf("\n\nTest Appending to a full vector\n");
@@ -154,13 +156,16 @@ int main()
     VectorAppend(&test, &d);
     printf(" (After) Vector.lenght = %d\n", VectorLength(&test));
 
+
     // Test printing the vector
     VectorMap(&test, (VectorMapFunction)print_double, NULL);
+
 
     // Check sorted
     printf("\n\nSorting the vector\n");
     VectorSort(&test, (VectorCompareFunction)compare_double);
     VectorMap(&test, (VectorMapFunction)print_double, NULL);
+
 
     // Test performing binary search on vector
     printf("\n\nSearching value in vector(sorted)\n");
@@ -185,6 +190,7 @@ int main()
     else
         printf("Success: Item %.2f was not found\n", d);
 
+
     printf("\nSearching value not in vector(sorted)\n");
     d = 35.23;
     i = VectorSearch(&test, &d, (VectorCompareFunction)compare_double, 0, true);
@@ -192,5 +198,8 @@ int main()
         printf("Fail: Item %.2f was found in position %d\n", d, i);
     else
         printf("Success: Item %.2f was not found\n", d);
+
+
+    VectorDispose(&test);
     return 0;
 }
