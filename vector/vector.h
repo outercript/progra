@@ -52,5 +52,6 @@ void VectorDelete(vector *v, int position);
 int VectorSearch(const vector *v, const void *key, VectorCompareFunction searchfn, int startIndex, bool isSorted);
 void VectorSort(vector *v, VectorCompareFunction comparefn);
 void VectorMap(vector *v, VectorMapFunction mapfn, void *auxData);
+void VectorExpand(vector *v);
 
 #endif

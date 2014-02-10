@@ -59,9 +59,7 @@ void VectorAppend(vector *v, const void *elemAddr)
     // Increase vector length if maximum has been reached
     if (v->lastElem == v->currentLength)
     {
-        v->currentLength += v->initialLength;
-        v->elements = realloc(v->elements, v->currentLength * v->elemSize);
-        assert(v->elements != NULL);
+        VectorExpand(v);
     }
 
     // Copy the object and increase count
@@ -85,6 +83,14 @@ static const int kNotFound = -1;
 int VectorSearch(const vector *v, const void *key, VectorCompareFunction searchFn, int startIndex, bool isSorted)
 {
     return -1;
+}
+
+void VectorExpand(vector *v)
+{
+    printf(" Expanding vector from %d to %d\n",v->currentLength, v->currentLength+v->initialLength);
+    v->currentLength += v->initialLength;
+    v->elements = realloc(v->elements, v->currentLength * v->elemSize);
+    assert(v->elements != NULL);
 }
 
 void main(){}
