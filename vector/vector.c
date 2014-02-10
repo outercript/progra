@@ -89,10 +89,21 @@ void VectorMap(vector *v, VectorMapFunction mapFn, void *auxData)
     }
 }
 
-static const int kNotFound = -1;
 int VectorSearch(const vector *v, const void *key, VectorCompareFunction searchFn, int startIndex, bool isSorted)
 {
-    return -1;
+    void *elemAddr = NULL;
+    void *baseAddr = (char *)v->elements + (startIndex * v->elemSize);
+
+    if (isSorted == true)
+    {
+        elemAddr = bsearch(key, baseAddr, v->lastElem, v->elemSize, searchFn);
+    }
+
+    if (elemAddr != NULL)
+    {
+        return ((char *)elemAddr - (char *)v->elements) / v->elemSize;
+    }
+    return kNotFound;
 }
 
 void VectorExpand(vector *v)
@@ -157,5 +168,36 @@ int main()
     printf("\n\nSorting the vector\n");
     VectorSort(&test, (VectorCompareFunction)compare_double);
     VectorMap(&test, (VectorMapFunction)print_double, NULL);
+
+    // Test performing binary search on vector
+    printf("\n\nSearching value in vector(sorted)\n");
+    d = 6.0;
+    i = VectorSearch(&test, &d, (VectorCompareFunction)compare_double, 0, true);
+    if (i != kNotFound)
+        printf("Success: Item %.2f was found in position %d\n", d, i);
+    else
+        printf("Fail: Item %.2f was not found\n", d);
+
+    printf("\nSearching value in vector(sorted) w/ offset=2\n");
+    i = VectorSearch(&test, &d, (VectorCompareFunction)compare_double, 2, true);
+    if (i != kNotFound)
+        printf("Success: Item %.2f was found in position %d\n", d, i);
+    else
+        printf("Fail: Item %.2f was not found\n", d);
+
+    printf("\nSearching value in vector(sorted) w/ offset=4\n");
+    i = VectorSearch(&test, &d, (VectorCompareFunction)compare_double, 4, true);
+    if (i != kNotFound)
+        printf("Fail: Item %.2f was found in position %d\n", d, i);
+    else
+        printf("Success: Item %.2f was not found\n", d);
+
+    printf("\nSearching value not in vector(sorted)\n");
+    d = 35.23;
+    i = VectorSearch(&test, &d, (VectorCompareFunction)compare_double, 0, true);
+    if (i != kNotFound)
+        printf("Fail: Item %.2f was found in position %d\n", d, i);
+    else
+        printf("Success: Item %.2f was not found\n", d);
     return 0;
 }

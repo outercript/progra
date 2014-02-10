@@ -20,6 +20,7 @@ typedef struct {
     void (*freefn)(void *);
 } vector;
 
+static const int kNotFound = -1;
 /**
  * Function: VectorNew
  * Usar: vector myFriends;
