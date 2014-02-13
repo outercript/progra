@@ -50,7 +50,17 @@ void VectorReplace(vector *v, const void *elemAddr, int position)
 
 void VectorInsert(vector *v, const void *elemAddr, int position)
 {
-    // TODO: Implement insert function
+    void *currAddr = VectorNth(v, position);
+    void *nextAddr = (char *)currAddr + v->elemSize;
+    size_t offset = (v->lastElem - position + 1) * v->elemSize;
+
+    if (v->lastElem == v->currentLength) {
+        VectorExpand(v);
+    }
+
+    memmove(nextAddr, currAddr, offset);
+    VectorReplace(v, elemAddr, position);
+    v->lastElem++;
 }
 
 void VectorAppend(vector *v, const void *elemAddr)
@@ -167,14 +177,14 @@ int main()
     VectorMap(&test, (VectorMapFunction)print_double, NULL);
 
 
-    // Test deletion
-    printf("\n\nTest Deletion");
-    printf("\nbefore: ");
-    VectorAppend(&test, &d);
+    // Test insert & deletion
+    printf("\n\nTest Insert\n");
+    d = 666.99;
+    VectorInsert(&test, &d, 5);
     VectorMap(&test, (VectorMapFunction)print_double, NULL);
 
-    printf("\nafter: ");
-    VectorDelete(&test, 6);
+    printf("\n\nTest Delete\n");
+    VectorDelete(&test, 5);
     VectorMap(&test, (VectorMapFunction)print_double, NULL);
 
 
