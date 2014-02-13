@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <search.h>
 
 void VectorNew(vector *v, int elemSize, VectorFreeFunction freeFn, int initialAllocation)
 {
@@ -93,7 +94,7 @@ int VectorSearch(const vector *v, const void *key, VectorCompareFunction searchF
     if (isSorted == true) {
         elemAddr = bsearch(key, baseAddr, elemLimit, v->elemSize, searchFn);
     } else {
-        // TODO: Implement linear search
+        elemAddr = lfind(key, baseAddr, &elemLimit, v->elemSize, searchFn);
     }
 
     if (elemAddr != NULL) {
@@ -161,6 +162,39 @@ int main()
     // Test printing the vector
     VectorMap(&test, (VectorMapFunction)print_double, NULL);
 
+    // Test linear search
+    printf("\n\nSearching value in vector\n");
+    d = 7.23;
+
+    printf("offset=0: ");
+    i = VectorSearch(&test, &d, (VectorCompareFunction)compare_double, 0, false);
+    if (i != kNotFound)
+        printf("Success: Item %.2f was found in position %d\n", d, i);
+    else
+        printf("Fail: Item %.2f was not found\n", d);
+
+    printf("offset=2: ");
+    i = VectorSearch(&test, &d, (VectorCompareFunction)compare_double, 2, false);
+    if (i != kNotFound)
+        printf("Success: Item %.2f was found in position %d\n", d, i);
+    else
+        printf("Fail: Item %.2f was not found\n", d);
+
+    printf("offset=4: ");
+    i = VectorSearch(&test, &d, (VectorCompareFunction)compare_double, 4, false);
+    if (i != kNotFound)
+        printf("Fail: Item %.2f was found in position %d\n", d, i);
+    else
+        printf("Success: Item %.2f was not found\n", d);
+
+    printf("Value not in vector: ");
+    d = 35.23;
+    i = VectorSearch(&test, &d, (VectorCompareFunction)compare_double, 0, false);
+    if (i != kNotFound)
+        printf("Fail: Item %.2f was found in position %d\n", d, i);
+    else
+        printf("Success: Item %.2f was not found\n", d);
+
 
     // Check sorted
     printf("\n\nSorting the vector\n");
@@ -168,31 +202,32 @@ int main()
     VectorMap(&test, (VectorMapFunction)print_double, NULL);
 
 
-    // Test performing binary search on vector
+    // Test binary search
     printf("\n\nSearching value in vector(sorted)\n");
     d = 6.0;
+
+    printf("offset=0 :");
     i = VectorSearch(&test, &d, (VectorCompareFunction)compare_double, 0, true);
     if (i != kNotFound)
         printf("Success: Item %.2f was found in position %d\n", d, i);
     else
         printf("Fail: Item %.2f was not found\n", d);
 
-    printf("\nSearching value in vector(sorted) w/ offset=2\n");
+    printf("offset=2 :");
     i = VectorSearch(&test, &d, (VectorCompareFunction)compare_double, 2, true);
     if (i != kNotFound)
         printf("Success: Item %.2f was found in position %d\n", d, i);
     else
         printf("Fail: Item %.2f was not found\n", d);
 
-    printf("\nSearching value in vector(sorted) w/ offset=4\n");
+    printf("offset=4: ");
     i = VectorSearch(&test, &d, (VectorCompareFunction)compare_double, 4, true);
     if (i != kNotFound)
         printf("Fail: Item %.2f was found in position %d\n", d, i);
     else
         printf("Success: Item %.2f was not found\n", d);
 
-
-    printf("\nSearching value not in vector(sorted)\n");
+    printf("Value not in vector: ");
     d = 35.23;
     i = VectorSearch(&test, &d, (VectorCompareFunction)compare_double, 0, true);
     if (i != kNotFound)
