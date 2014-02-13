@@ -88,9 +88,10 @@ int VectorSearch(const vector *v, const void *key, VectorCompareFunction searchF
 {
     void *elemAddr = NULL;
     void *baseAddr = (char *)v->elements + (startIndex * v->elemSize);
+    size_t elemLimit = v->lastElem - startIndex;
 
     if (isSorted == true) {
-        elemAddr = bsearch(key, baseAddr, v->lastElem, v->elemSize, searchFn);
+        elemAddr = bsearch(key, baseAddr, elemLimit, v->elemSize, searchFn);
     } else {
         // TODO: Implement linear search
     }
