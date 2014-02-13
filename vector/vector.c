@@ -65,9 +65,16 @@ void VectorAppend(vector *v, const void *elemAddr)
 
 void VectorDelete(vector *v, int position)
 {
-    void *elemAddr;
-    elemAddr = VectorNth(v, position);
-    // TODO: Implement delete function
+    void *elemAddr = VectorNth(v, position);
+    void *nextAddr = (char *)elemAddr + v->elemSize;
+    size_t offset = (v->lastElem - position) * v->elemSize;
+
+    if(v->freefn != NULL) {
+        v->freefn(elemAddr);
+    }
+
+    memmove(elemAddr, nextAddr, offset);
+    v->lastElem--;
 }
 
 void VectorSort(vector *v, VectorCompareFunction compare)
@@ -157,10 +164,19 @@ int main()
     d = 9.43;
     VectorAppend(&test, &d);
     printf(" (After) Vector.lenght = %d\n", VectorLength(&test));
-
-
-    // Test printing the vector
     VectorMap(&test, (VectorMapFunction)print_double, NULL);
+
+
+    // Test deletion
+    printf("\n\nTest Deletion");
+    printf("\nbefore: ");
+    VectorAppend(&test, &d);
+    VectorMap(&test, (VectorMapFunction)print_double, NULL);
+
+    printf("\nafter: ");
+    VectorDelete(&test, 6);
+    VectorMap(&test, (VectorMapFunction)print_double, NULL);
+
 
     // Test linear search
     printf("\n\nSearching value in vector\n");
