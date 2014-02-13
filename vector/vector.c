@@ -50,15 +50,19 @@ void VectorReplace(vector *v, const void *elemAddr, int position)
 
 void VectorInsert(vector *v, const void *elemAddr, int position)
 {
-    void *currAddr = VectorNth(v, position);
-    void *nextAddr = (char *)currAddr + v->elemSize;
-    size_t offset = (v->lastElem - position + 1) * v->elemSize;
+    void *currAddr;
+    void *nextAddr;
+    size_t offset;
 
     if (v->lastElem == v->currentLength) {
         VectorExpand(v);
     }
 
+    currAddr = VectorNth(v, position);
+    nextAddr = (char *)currAddr + v->elemSize;
+    offset = (v->lastElem - position) * v->elemSize;
     memmove(nextAddr, currAddr, offset);
+
     VectorReplace(v, elemAddr, position);
     v->lastElem++;
 }

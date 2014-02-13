@@ -14,7 +14,7 @@ void print_double(void *elemAddr, void *auxData)
     printf("%.2f, ", *(double *)elemAddr);
 }
 
-int test_main()
+int main()
 {
     int i, length;
     double d;
