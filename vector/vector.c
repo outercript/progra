@@ -81,7 +81,7 @@ void VectorDelete(vector *v, int position)
 {
     void *elemAddr = VectorNth(v, position);
     void *nextAddr = (char *)elemAddr + v->elemSize;
-    size_t offset = (v->lastElem - position) * v->elemSize;
+    size_t offset = (v->lastElem - position - 1) * v->elemSize;
 
     if(v->freefn != NULL) {
         v->freefn(elemAddr);
