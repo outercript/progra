@@ -1,0 +1,14 @@
+# depslib dependency file v1.0
+1398388225 source:/home/osuro/repos/progra/worms/main.c
+	<sys/cdefs.h>
+	<ctype.h>
+	<curses.h>
+	<err.h>
+	<signal.h>
+	<stdlib.h>
+	<termios.h>
+	<unistd.h>
+	"main.h"
+
+1398388335 /home/osuro/repos/progra/worms/main.h
+
