@@ -8,126 +8,78 @@
 #include <unistd.h>
 
 #include "main.h"
+#include "worm.h"
 
-#define newlink() (struct body *) malloc(sizeof (struct body));
-
-WINDOW *tv;
-WINDOW *stw;
+WINDOW *play_area;
+WINDOW *status_bar;
 char outbuf[BUFSIZ];
-
 
 int main(int argc, char **argv)
 {
+    Worm *player_1;
+    setup();
+
     /*Create worm*/
-    Worm player_1;
-    player_1.HEAD = '@';
-    player_1.BODY = '#';
-    player_1.growing = 0;
-    player_1.running = 0;
-    player_1.score = 0;
-
-    /* Revoke setgid privileges */
-    setregid(getgid(), getgid());
-
-    setbuf(stdout, outbuf);
-    srand(getpid());
-    initscr();
-    cbreak();
-    noecho();
-
-#ifdef KEY_LEFT
-    keypad(stdscr, TRUE);
-#endif
-    player_1.slow = (baudrate() <= 1200);
-    clear();
-    if (COLS < 18 || LINES < 5) {
-        /*
-         * Insufficient room for the line with " Worm" and the
-         * score if fewer than 18 columns; insufficient room for
-         * anything much if fewer than 5 lines.
-         */
-        endwin();
-        errx(1, "screen too small");
-    }
-
-
+    player_1 = add_player('@', '#', 80);
+    add_player('D', '=', 5);
+    /*
     if (argc == 2)
-        player_1.start_len = atoi(argv[1]);
-    if ((player_1.start_len <= 0) || (player_1.start_len > ((LINES-3) * (COLS-2)) / 3))
-        player_1.start_len = LENGTH;
-
-
-    // Create the window
-    stw = newwin(1, COLS-1, 0, 0);
-    tv = newwin(LINES-1, COLS-1, 1, 0);
-    box(tv, '*', '*');
-    scrollok(tv, FALSE);
-    scrollok(stw, FALSE);
-    wmove(stw, 0, 0);
-    wprintw(stw, " Worm");
-    refresh();
-    wrefresh(stw);
-    wrefresh(tv);
-
-
-    life(&player_1,2);                 /* Create the worm */
+        player_1->start_len = atoi(argv[1]);
+    if ((player_1->start_len <= 0) || (player_1->start_len > ((PLAYABLE_HEIGHT) * (PLAYABLE_WIDTH)) / 3))
+        player_1->start_len = LENGTH;
+    life(player_1, 2);                 /* Create the worm */
     prize();          /* Put up a goal */
 
 
     while(1) {
-        if (player_1.running) {
-            player_1.running--;
-            process(&player_1, player_1.lastch);
+        if (player_1->running) {
+            player_1->running--;
+            process(player_1, player_1->lastch);
         } else {
             fflush(stdout);
-            process(&player_1, getch());
+            process(player_1, getch());
         }
     }
+}
+
+Worm *add_player(char head, char body, int initial_size)
+{
+    int pos = rnd(4) + 1;
+    Worm *p = WormCreate(head, body, initial_size);
+    if(p == NULL)
+        err(1, NULL);
+
+    life(p, pos);
+    return p;
 }
 
 void life(Worm *W, int ypos)
 {
-    struct body *bp, *np;
-    int i, j = 1;
+    int x, y, i, j = 1;
 
-    np = NULL;
-    W->head = newlink();
-    if (W->head == NULL)
-        err(1, NULL);
-
-    W->head->x = W->start_len % (COLS-5) + 2;
-    W->head->y = LINES / ypos;
-    W->head->next = NULL;
+    x = W->start_len % (PLAYABLE_WIDTH-2) + 2;
+    y = LINES / ypos;
+    WormGrowHead(W, x, y);
     display(W->head, W->HEAD);
 
-    for (i = 0, bp = W->head; i < W->start_len; i++, bp = np) {
-        np = newlink();
-
-        if (np == NULL)
-            err(1, NULL);
-        np->next = bp;
-        bp->prev = np;
-
-        if (((bp->x <= 2) && (j == 1)) || ((bp->x >= COLS-4) && (j == -1))) {
+    for (i = 0, W->tail = W->head; i < W->start_len; i++) {
+        x = W->tail->x;
+        y = W->tail->y;
+        if (((x <= 2) && (j == 1)) || ((x >= PLAYABLE_WIDTH-1) && (j == -1))) {
             j *= -1;
-            np->x = bp->x;
-            np->y = bp->y + 1;
+            y++;
         } else {
-            np->x = bp->x - j;
-            np->y = bp->y;
+            x -= j;
         }
-        display(np, W->BODY);
+        WormGrowTail(W, x, y);
+        display(W->tail, W->BODY);
     }
-
-    W->tail = np;
-    W->tail->prev = NULL;
-    W->visible_len = W->start_len + 1;
 }
 
 void display(const struct body *pos, char chr)
 {
-    wmove(tv, pos->y, pos->x);
-    waddch(tv, chr);
+    wmove(play_area, pos->y, pos->x);
+    waddch(play_area, chr);
 }
 
 
@@ -138,7 +90,7 @@ int rnd(int range)
 
 void newpos(Worm *W, struct body * bp)
 {
-    if (W != NULL && W->visible_len == (LINES-3) * (COLS-3) - 1) {
+    if (W != NULL && W->visible_len >= (20)) {
         endwin();
 
         printf("\nYou won!\n");
@@ -147,10 +99,10 @@ void newpos(Worm *W, struct body * bp)
     }
 
     do {
-        bp->y = rnd(LINES-3)+ 1;
-        bp->x = rnd(COLS-3) + 1;
-        wmove(tv, bp->y, bp->x);
-    } while(winch(tv) != ' ');
+        bp->y = rnd(PLAYABLE_HEIGHT) + 1;
+        bp->x = rnd(PLAYABLE_WIDTH) + 1;
+        wmove(play_area, bp->y, bp->x);
+    } while(winch(play_area) != ' ');
 }
 
 void prize(void)
@@ -158,14 +110,14 @@ void prize(void)
     int value;
     value = rnd(9) + 1;
     newpos(NULL, &goody);
-    waddch(tv, value+'0');
-    wrefresh(tv);
+    waddch(play_area, value+'0');
+    wrefresh(play_area);
 }
 
 void process(Worm *W, int ch)
 {
     int x,y; // Head position
-    struct body *nh;
+    struct body *new_head;
 
     x = W->head->x;
     y = W->head->y;
@@ -207,46 +159,30 @@ void process(Worm *W, int ch)
 
     if (W->growing == 0) { // Update the tail of the worm
         display(W->tail, ' ');
-        W->tail->next->prev = NULL;
-        nh = W->tail->next;
-        free(W->tail);
-        W->tail = nh;
-        W->visible_len--;
+        WormStripTail(W);
     } else {
         W->growing--;
     }
 
     display(W->head, W->BODY); // Transform head into a body part
-    wmove(tv, y, x); // Moves the cursor to the head position
+    wmove(play_area, y, x); // Moves the cursor to the head position
 
-    if (isdigit(ch = winch(tv))) { // Obtain the caracter at screen cursor
+    if (isdigit(ch = winch(play_area))) { // Obtain the caracter at screen cursor
         W->growing += ch-'0';
-        prize();
         W->score += W->growing;
         W->running = 0;
-        wmove(stw, 0, COLS - 12);
-        wprintw(stw, "Score: %3d", W->score);
-        wrefresh(stw);
+        update_score(W->score);
+        prize();
+
     } else if(ch != ' ')
         crash(W);
 
-    nh = newlink();
-
-    if (nh == NULL)
-        err(1, NULL);
-
-    nh->next = NULL;
-    nh->prev = W->head;
-    W->head->next = nh;
-    nh->y = y;
-    nh->x = x;
-    display(nh, W->HEAD);
-    W->head = nh;
-    W->visible_len++;
+    WormGrowHead(W, x, y);
+    display(W->head, W->HEAD);
 
     if (!(W->slow && W->running)) {
-        wmove(tv, W->head->y, W->head->x);
-        wrefresh(tv);
+        wmove(play_area, W->head->y, W->head->x);
+        wrefresh(play_area);
     }
 
 }
@@ -259,3 +195,54 @@ void crash(Worm *W)
     exit(0);
 }
 
+void update_score(int score)
+{
+    wmove(status_bar, 0, COLS - 12);
+    wprintw(status_bar, "Score: %3d", score);
+    wrefresh(status_bar);
+}
+
+void setup(void)
+{
+    /* Revoke setgid privileges */
+    setregid(getgid(), getgid());
+
+    setbuf(stdout, outbuf);
+    srand(getpid());
+    initscr();
+    cbreak();
+    noecho();
+
+#ifdef KEY_LEFT
+    keypad(stdscr, TRUE);
+#endif
+    clear();
+    if (COLS < MIN_WINDOW_WIDTH || LINES < MIN_WINDOW_HEIGHT) {
+        /*
+         * Insufficient room for the line with " Worm" and the
+         * score if fewer than 18 columns; insufficient room for
+         * anything much if fewer than 5 lines.
+         */
+        endwin();
+        errx(1, "screen too small");
+    }
+
+    // Hide cursor
+    curs_set(0);
+
+    // Create the game windows
+    status_bar = newwin(1, WINDOW_WIDTH, 0, 0);
+    scrollok(status_bar, FALSE);
+    wmove(status_bar, 0, 0);
+    wprintw(status_bar, " Worm");
+
+    play_area = newwin(WINDOW_HEIGHT, WINDOW_WIDTH, 1, 0);
+    scrollok(play_area, FALSE);
+    box(play_area, '*', '*');
+
+    refresh();
+    wrefresh(status_bar);
+    wrefresh(play_area);
+
+    update_score(0);
+}

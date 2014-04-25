@@ -29,6 +29,7 @@
 			</Target>
 		</Build>
 		<Compiler>
+			<Add option="-Wextra" />
 			<Add option="-Wall" />
 		</Compiler>
 		<Linker>
@@ -38,6 +39,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="main.h" />
+		<Unit filename="worm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="worm.h" />
 		<Extensions>
 			<envvars />
 			<code_completion />
