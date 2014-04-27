@@ -7,7 +7,6 @@ typedef struct {
     char HEAD;
     char BODY;
     int growing;
-    int running;
     int slow;
     int score;
     int start_len;

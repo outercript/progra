@@ -32,13 +32,8 @@ int main(int argc, char **argv)
 
 
     while(1) {
-        if (player_1->running) {
-            player_1->running--;
-            process(player_1, player_1->lastch);
-        } else {
-            fflush(stdout);
-            process(player_1, getch());
-        }
+        fflush(stdout);
+        process(player_1, getch());
     }
 }
 
@@ -117,8 +112,6 @@ void prize(void)
 void process(Worm *W, int ch)
 {
     int x,y; // Head position
-    struct body *new_head;
-
     x = W->head->x;
     y = W->head->y;
 
@@ -170,7 +163,6 @@ void process(Worm *W, int ch)
     if (isdigit(ch = winch(play_area))) { // Obtain the caracter at screen cursor
         W->growing += ch-'0';
         W->score += W->growing;
-        W->running = 0;
         update_score(W->score);
         prize();
 
@@ -180,7 +172,7 @@ void process(Worm *W, int ch)
     WormGrowHead(W, x, y);
     display(W->head, W->HEAD);
 
-    if (!(W->slow && W->running)) {
+    if (!(W->slow)) {
         wmove(play_area, W->head->y, W->head->x);
         wrefresh(play_area);
     }
