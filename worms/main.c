@@ -9,138 +9,133 @@
 
 #include "main.h"
 #include "worm.h"
+#include "defines.h"
 
 WINDOW *play_area;
 WINDOW *status_bar;
 char outbuf[BUFSIZ];
+int current_player = 0;
 
-int main(int argc, char **argv)
+int main()
 {
-    Worm *player_1;
+    Worm *p[5];
     setup();
 
     /*Create worm*/
-    player_1 = add_player('@', '#', 80);
-    add_player('D', '=', 5);
-    /*
-    if (argc == 2)
-        player_1->start_len = atoi(argv[1]);
-    if ((player_1->start_len <= 0) || (player_1->start_len > ((PLAYABLE_HEIGHT) * (PLAYABLE_WIDTH)) / 3))
-        player_1->start_len = LENGTH;
-    life(player_1, 2);                 /* Create the worm */
+    p[0] = add_player('@', '#', 80);
+    p[1] = add_player('D', '=', 125);
+    p[2] = add_player('X', '+', 135);
+    p[3] = add_player('O', '-', 75);
+    p[4] = add_player('K', 'o', 145);
+
     prize();          /* Put up a goal */
+    wrefresh(play_area);
+    fflush(stdout);
 
-
-    while(1) {
+    while(current_player < 5) {
+        process(p[current_player], getch());
         fflush(stdout);
-        process(player_1, getch());
     }
+
+    crash(p[0]);
 }
 
 Worm *add_player(char head, char body, int initial_size)
 {
-    int pos = rnd(4) + 1;
+    WormBody pos;
     Worm *p = WormCreate(head, body, initial_size);
     if(p == NULL)
         err(1, NULL);
 
-    life(p, pos);
+    while(1){
+        newpos(&pos);
+        if ((checkpos(&pos) && ALL_EMPTY)){
+            break;
+        }
+    }
+    WormInit(p, pos);
     return p;
 }
 
-void life(Worm *W, int ypos)
-{
-    int x, y, i, j = 1;
-
-    x = W->start_len % (PLAYABLE_WIDTH-2) + 2;
-    y = LINES / ypos;
-    WormGrowHead(W, x, y);
-    display(W->head, W->HEAD);
-
-    for (i = 0, W->tail = W->head; i < W->start_len; i++) {
-        x = W->tail->x;
-        y = W->tail->y;
-        if (((x <= 2) && (j == 1)) || ((x >= PLAYABLE_WIDTH-1) && (j == -1))) {
-            j *= -1;
-            y++;
-        } else {
-            x -= j;
-        }
-        WormGrowTail(W, x, y);
-        display(W->tail, W->BODY);
-    }
-}
-
-void display(const struct body *pos, char chr)
+void display(const WormBody *pos, char chr)
 {
     wmove(play_area, pos->y, pos->x);
     waddch(play_area, chr);
 }
-
 
 int rnd(int range)
 {
     return abs((rand()>>5)+(rand()>>5)) % range;
 }
 
-void newpos(Worm *W, struct body * bp)
+int checkpos(WormBody *pos)
 {
-    if (W != NULL && W->visible_len >= (20)) {
-        endwin();
+    int result = 0;
 
-        printf("\nYou won!\n");
-        printf("Your final score was %d\n\n", W->score);
-        exit(0);
-    }
+    if(emptypos(pos->x - 1, pos->y))
+        result |= LEFT_EMPTY;
+    if (emptypos(pos->x + 1, pos->y))
+        result |= RIGHT_EMPTY;
+    if (emptypos(pos->x, pos->y + 1))
+        result |= DOWN_EMPTY;
+    if (emptypos(pos->x, pos->y - 1))
+        result |= UP_EMPTY;
 
+    return result;
+}
+
+void newpos(WormBody *pos)
+{
     do {
-        bp->y = rnd(PLAYABLE_HEIGHT) + 1;
-        bp->x = rnd(PLAYABLE_WIDTH) + 1;
-        wmove(play_area, bp->y, bp->x);
-    } while(winch(play_area) != ' ');
+        pos->y = rnd(PLAYABLE_HEIGHT) + 1;
+        pos->x = rnd(PLAYABLE_WIDTH) + 1;
+    } while(!(emptypos(pos->x, pos->y)));
+}
+
+int emptypos(int x, int y)
+{
+    wmove(play_area, y, x);
+    return winch(play_area) == ' ';
+}
+
+int chatpos(int x, int y)
+{
+    wmove(play_area, y, x);
+    return winch(play_area);
 }
 
 void prize(void)
 {
-    int value;
-    value = rnd(9) + 1;
-    newpos(NULL, &goody);
-    waddch(play_area, value+'0');
-    wrefresh(play_area);
+    WormBody goody;
+    int value = rnd(9) + 1;
+    newpos(&goody);
+    waddch(play_area, value + '0');
 }
 
 void process(Worm *W, int ch)
 {
-    int x,y; // Head position
+    int x, y; // Head position
     x = W->head->x;
     y = W->head->y;
 
     switch(ch) {
-#ifdef KEY_LEFT
     case KEY_LEFT:
-#endif
-    case 'h':
+    case KEYBOARD_LEFT:
         x--;
         break;
 
-#ifdef KEY_DOWN
     case KEY_DOWN:
-#endif
-    case 'j':
+    case KEYBOARD_DOWN:
         y++;
         break;
 
-#ifdef KEY_UP
     case KEY_UP:
-#endif
-    case 'k':
+    case KEYBOARD_UP:
         y--;
         break;
 
-#ifdef KEY_RIGHT
     case KEY_RIGHT:
-#endif
-    case 'l':
+    case KEYBOARD_RIGHT:
         x++;
         break;
 
@@ -148,35 +143,16 @@ void process(Worm *W, int ch)
         return;
     }
 
-    W->lastch = ch;
-
-    if (W->growing == 0) { // Update the tail of the worm
-        display(W->tail, ' ');
-        WormStripTail(W);
-    } else {
-        W->growing--;
-    }
-
-    display(W->head, W->BODY); // Transform head into a body part
-    wmove(play_area, y, x); // Moves the cursor to the head position
-
-    if (isdigit(ch = winch(play_area))) { // Obtain the caracter at screen cursor
-        W->growing += ch-'0';
-        W->score += W->growing;
+    ch = WormMove(W, x, y);
+    if (ch > 0) {
         update_score(W->score);
         prize();
-
-    } else if(ch != ' ')
-        crash(W);
-
-    WormGrowHead(W, x, y);
-    display(W->head, W->HEAD);
-
-    if (!(W->slow)) {
-        wmove(play_area, W->head->y, W->head->x);
-        wrefresh(play_area);
+    } else if (ch < 0) {
+        WormDestroy(W);
+        current_player++;
     }
 
+    wrefresh(play_area);
 }
 
 void crash(Worm *W)

@@ -1,31 +1,36 @@
 #ifndef __WORM__
 #define __WORM__
 
-typedef struct {
-    struct body *head;
-    struct body *tail;
-    char HEAD;
-    char BODY;
-    int growing;
-    int slow;
-    int score;
-    int start_len;
-    int visible_len;
-    int lastch;
-} Worm;
-
-struct body {
+typedef struct body {
     int x;
     int y;
     struct body *prev;
     struct body *next;
-} goody;
+} WormBody;
 
-extern int baudrate(void);
+typedef struct {
+    WormBody *head;
+    WormBody *tail;
+    char HEAD;
+    char BODY;
+    int growing;
+    int score;
+    int start_len;
+    int visible_len;
+} Worm;
+
+
+extern int emptypos(int, int);
 extern void err(int, const char*, ...);
+extern void display(const WormBody *, char);
+extern int chatpos(int, int);
 
+
+void WormInit(Worm *w, WormBody pos);
 Worm *WormCreate(char head, char body, int initial_size);
-void WormStripTail(Worm* w);
+void WormDestroy(Worm *w);
+int WormMove(Worm *w, int x, int y);
+void WormStripTail(Worm *w);
 void WormGrowTail(Worm *w, int x, int y);
 void WormGrowHead(Worm *w, int x, int y);
 

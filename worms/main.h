@@ -14,14 +14,16 @@
 #define PLAYABLE_WIDTH      COLS-3
 #define PLAYABLE_HEIGHT     LINES-3
 
-void  crash(Worm *);
-void  display(const struct body *, char);
-void  life(Worm *, int);
-void  newpos(Worm *, struct body *);
-void  process(Worm *,int);
-void  prize(void);
+void  display(const WormBody *, char);
+int   emptypos(int, int);
+
 int   rnd(int);
 void  setup(void);
+void  prize(void);
+void  crash(Worm *);
+void  newpos(WormBody *);
+int   checkpos(WormBody *);
+void  process(Worm *,int);
 void  update_score(int score);
 Worm  *add_player(char head, char body, int initial_size);
 
