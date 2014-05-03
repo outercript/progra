@@ -1,5 +1,6 @@
 #ifndef __WORM_UTILS__
 #define __WORM_UTILS__
+#include <curses.h>
 
 // Masks
 #define LEFT_EMPTY  0x01

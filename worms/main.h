@@ -6,8 +6,8 @@
 #define LENGTH 7
 #define RUNLEN 8
 
-#define PLAYABLE_WIDTH      (COLS-3)
-#define PLAYABLE_HEIGHT     (LINES-3)
+#define PLAYABLE_WIDTH      (WINDOW_WIDTH-2)
+#define PLAYABLE_HEIGHT     (WINDOW_HEIGHT-2)
 
 void  setup(void);
 void  prize(void);

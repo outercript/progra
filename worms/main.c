@@ -1,13 +1,9 @@
-#include <sys/cdefs.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/stat.h>
-#include <ctype.h>
-#include <curses.h>
-#include <errno.h>
 #include <signal.h>
 #include <fcntl.h>
-#include <stdlib.h>
-#include <termios.h>
-#include <stdio.h>
+#include <errno.h>
 #include <unistd.h>
 
 #include "main.h"
