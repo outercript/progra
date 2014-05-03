@@ -9,11 +9,10 @@
 #define PLAYABLE_WIDTH      (WINDOW_WIDTH-2)
 #define PLAYABLE_HEIGHT     (WINDOW_HEIGHT-2)
 
-void  setup(void);
 void  prize(void);
 void  crash(Worm *);
 void  newpos(WormBody *);
-void  process(Worm *, int);
+int  process(Worm *, int);
 
 Worm  *add_player(char head, char body, int initial_size);
 

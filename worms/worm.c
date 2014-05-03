@@ -1,6 +1,13 @@
 #include <stdlib.h>
 #include <ctype.h>
+
 #include "worm.h"
+#include "utils.h"
+
+static void WormStripTail(Worm *w);
+static void WormGrowTail(Worm *w, int x, int y);
+static void WormGrowHead(Worm *w, int x, int y);
+
 
 Worm *WormCreate(char head, char body, int initial_size)
 {
@@ -52,9 +59,30 @@ void WormInit(Worm *w, WormBody pos)
     }
 }
 
-int WormMove(Worm *w, int x, int y)
+int WormMove(Worm *w, int position)
 {
     int ch, score = 0;
+    int x = w->head->x;
+    int y = w->head->y;
+
+    switch(position) {
+    case KEYBOARD_LEFT:
+        x--;
+        break;
+    case KEYBOARD_DOWN:
+        y++;
+        break;
+    case KEYBOARD_UP:
+        y--;
+        break;
+    case KEYBOARD_RIGHT:
+        x++;
+        break;
+    default:
+        return 0;
+    }
+
+
     if (w->growing == 0) {
         WormStripTail(w);
     } else {

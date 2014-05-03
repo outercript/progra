@@ -29,9 +29,6 @@ extern int chatpos(int, int);
 void WormInit(Worm *w, WormBody pos);
 Worm *WormCreate(char head, char body, int initial_size);
 void WormDestroy(Worm *w);
-int WormMove(Worm *w, int x, int y);
-void WormStripTail(Worm *w);
-void WormGrowTail(Worm *w, int x, int y);
-void WormGrowHead(Worm *w, int x, int y);
+int WormMove(Worm *w, int position);
 
 #endif // __WORM__

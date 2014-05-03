@@ -19,10 +19,10 @@ int main()
 {
     int server_fifo, fd;
     char buffer[MAXLINE], client_filename[MAXLINE];
-    int action;
+    int action, status;
     Worm *p[5];
 
-    setup();
+    setup_window();
     fflush(stdout);
 
     // Create worm
@@ -36,6 +36,7 @@ int main()
     update_board();
     fflush(stdout);
 
+    // Create server FIFO
     if ((mkfifo(SERVER_FIFO, FIFO_PERMS) < 0) && (errno != EEXIST)){
 		printf("can't create %s", SERVER_FIFO);
 		exit(EXIT_FAILURE);
@@ -43,16 +44,18 @@ int main()
 
     server_fifo = open(SERVER_FIFO, O_RDONLY);
 
-    while(current_player < 2){
-        while((read(server_fifo, buffer, MAXLINE)) > 0){
-            sscanf(buffer, "%s %d", client_filename, &action);
-            process(p[current_player], action);
-            fflush(stdout);
+    while(current_player < 5){
+        // Block until server FIFO has new data
+        while((read(server_fifo, buffer, MAXLINE)) <= 0);
 
-            fd = open(client_filename, O_WRONLY);
-            write(fd, &action, sizeof(action));
-            close(fd);
-        }
+        sscanf(buffer, "%s %d", client_filename, &action);
+        status = process(p[current_player], action);
+        fflush(stdout);
+
+        // Send response to the client
+        fd = open(client_filename, O_WRONLY);
+        write(fd, &status, sizeof(status));
+        close(fd);
     }
 
     crash(p[0]);
@@ -93,39 +96,22 @@ void prize(void)
     display(goody.x, goody.y, value + '0');
 }
 
-void process(Worm *W, int ch)
+int process(Worm *W, int ch)
 {
-    int x, y; // Head position
-    x = W->head->x;
-    y = W->head->y;
+    int res = W->score; // Head position
 
-    switch(ch) {
-    case KEYBOARD_LEFT:
-        x--;
-        break;
-    case KEYBOARD_DOWN:
-        y++;
-        break;
-    case KEYBOARD_UP:
-        y--;
-        break;
-    case KEYBOARD_RIGHT:
-        x++;
-        break;
-    default:
-        return;
-    }
-
-    ch = WormMove(W, x, y);
+    ch = WormMove(W, ch);
+    res = W->score;
     if (ch > 0) {
-        update_score(W->score);
         prize();
     } else if (ch < 0) {
         WormDestroy(W);
         current_player++;
+        res = -1;
     }
 
     update_board();
+    return res;
 }
 
 void crash(Worm *W)
@@ -134,11 +120,4 @@ void crash(Worm *W)
     printf("\nWell, you ran into something and the game is over.\n");
     printf("Your final score was %d\n\n", W->score);
     exit(0);
-}
-
-void setup(void)
-{
-    /* Revoke setgid privileges */
-    setup_window();
-    update_score(0);
 }
