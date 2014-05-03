@@ -22,7 +22,7 @@ typedef struct {
 
 extern int emptypos(int, int);
 extern void err(int, const char*, ...);
-extern void display(const WormBody *, char);
+extern void display(int, int, char);
 extern int chatpos(int, int);
 
 

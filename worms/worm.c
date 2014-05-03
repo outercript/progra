@@ -20,7 +20,7 @@ void WormDestroy(Worm *w)
     WormBody *current, *next;
     for(current = w->tail; current != NULL; current=next){
         next = current->next;
-        display(current, ' ');
+        display(current->x, current->y, ' ');
         free(current);
     }
     free(w);
@@ -61,7 +61,7 @@ int WormMove(Worm *w, int x, int y)
         w->growing--;
     }
 
-    display(w->head, w->BODY);
+    display(w->head->x, w->head->y, w->BODY);
 
     if (isdigit(ch = chatpos(x, y))) {
         w->growing += ch - '0';
@@ -91,7 +91,7 @@ void WormGrowHead(Worm *w, int x, int y)
     }
 
     w->head = new_head;
-    display(w->head, w->HEAD);
+    display(w->head->x, w->head->y, w->HEAD);
     w->visible_len++;
 }
 
@@ -108,7 +108,7 @@ void WormGrowTail(Worm *w, int x, int y)
     w->tail->prev = new_tail;
 
     w->tail = new_tail;
-    display(w->tail, w->BODY);
+    display(w->tail->x, w->tail->y, w->BODY);
     w->visible_len++;
 }
 
@@ -120,7 +120,7 @@ void WormStripTail(Worm* w)
 
     new_tail = w->tail->next;
     new_tail->prev = NULL;
-    display(w->tail, ' ');
+    display(w->tail->x, w->tail->y, ' ');
     free(w->tail);
 
     w->tail = new_tail;

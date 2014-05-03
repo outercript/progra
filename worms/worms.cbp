@@ -35,10 +35,18 @@
 		<Linker>
 			<Add option="-lncurses" />
 		</Linker>
+		<Unit filename="client.c">
+			<Option compilerVar="CC" />
+			<Option link="0" />
+		</Unit>
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="main.h" />
+		<Unit filename="utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="utils.h" />
 		<Unit filename="worm.c">
 			<Option compilerVar="CC" />
 		</Unit>

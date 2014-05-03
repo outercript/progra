@@ -1,43 +1,69 @@
 #include <sys/cdefs.h>
+#include <sys/stat.h>
 #include <ctype.h>
 #include <curses.h>
-#include <err.h>
+#include <errno.h>
 #include <signal.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <termios.h>
+#include <stdio.h>
 #include <unistd.h>
 
 #include "main.h"
 #include "worm.h"
-#include "defines.h"
+#include "utils.h"
 
-WINDOW *play_area;
-WINDOW *status_bar;
-char outbuf[BUFSIZ];
+#define	MAXLINE	    255
+#define FIFO_PERMS  (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
+
 int current_player = 0;
 
 int main()
 {
+    int server_fifo, fd;
+    char buffer[MAXLINE], client_filename[MAXLINE];
+    int action;
     Worm *p[5];
-    setup();
 
-    /*Create worm*/
+    setup();
+    fflush(stdout);
+
+    // Create worm
     p[0] = add_player('@', '#', 80);
     p[1] = add_player('D', '=', 125);
     p[2] = add_player('X', '+', 135);
     p[3] = add_player('O', '-', 75);
     p[4] = add_player('K', 'o', 145);
 
-    prize();          /* Put up a goal */
-    wrefresh(play_area);
+    prize();          // Put up a goal
+    update_board();
     fflush(stdout);
 
-    while(current_player < 5) {
-        process(p[current_player], getch());
-        fflush(stdout);
+    if ((mkfifo(SERVER_FIFO, FIFO_PERMS) < 0) && (errno != EEXIST)){
+		printf("can't create %s", SERVER_FIFO);
+		exit(EXIT_FAILURE);
+	}
+
+    server_fifo = open(SERVER_FIFO, O_RDONLY);
+
+    while(current_player < 2){
+        while((read(server_fifo, buffer, MAXLINE)) > 0){
+            sscanf(buffer, "%s %d", client_filename, &action);
+            process(p[current_player], action);
+            fflush(stdout);
+
+            fd = open(client_filename, O_WRONLY);
+            write(fd, &action, sizeof(action));
+            close(fd);
+        }
     }
 
     crash(p[0]);
+    close(server_fifo);
+	unlink(SERVER_FIFO);
+
+    return 0;
 }
 
 Worm *add_player(char head, char body, int initial_size)
@@ -47,41 +73,12 @@ Worm *add_player(char head, char body, int initial_size)
     if(p == NULL)
         err(1, NULL);
 
-    while(1){
+    do {
         newpos(&pos);
-        if ((checkpos(&pos) && ALL_EMPTY)){
-            break;
-        }
-    }
+    } while (!(checkpos(pos.x, pos.y) && ALL_EMPTY));
+
     WormInit(p, pos);
     return p;
-}
-
-void display(const WormBody *pos, char chr)
-{
-    wmove(play_area, pos->y, pos->x);
-    waddch(play_area, chr);
-}
-
-int rnd(int range)
-{
-    return abs((rand()>>5)+(rand()>>5)) % range;
-}
-
-int checkpos(WormBody *pos)
-{
-    int result = 0;
-
-    if(emptypos(pos->x - 1, pos->y))
-        result |= LEFT_EMPTY;
-    if (emptypos(pos->x + 1, pos->y))
-        result |= RIGHT_EMPTY;
-    if (emptypos(pos->x, pos->y + 1))
-        result |= DOWN_EMPTY;
-    if (emptypos(pos->x, pos->y - 1))
-        result |= UP_EMPTY;
-
-    return result;
 }
 
 void newpos(WormBody *pos)
@@ -92,24 +89,12 @@ void newpos(WormBody *pos)
     } while(!(emptypos(pos->x, pos->y)));
 }
 
-int emptypos(int x, int y)
-{
-    wmove(play_area, y, x);
-    return winch(play_area) == ' ';
-}
-
-int chatpos(int x, int y)
-{
-    wmove(play_area, y, x);
-    return winch(play_area);
-}
-
 void prize(void)
 {
     WormBody goody;
     int value = rnd(9) + 1;
     newpos(&goody);
-    waddch(play_area, value + '0');
+    display(goody.x, goody.y, value + '0');
 }
 
 void process(Worm *W, int ch)
@@ -119,26 +104,18 @@ void process(Worm *W, int ch)
     y = W->head->y;
 
     switch(ch) {
-    case KEY_LEFT:
     case KEYBOARD_LEFT:
         x--;
         break;
-
-    case KEY_DOWN:
     case KEYBOARD_DOWN:
         y++;
         break;
-
-    case KEY_UP:
     case KEYBOARD_UP:
         y--;
         break;
-
-    case KEY_RIGHT:
     case KEYBOARD_RIGHT:
         x++;
         break;
-
     default:
         return;
     }
@@ -152,65 +129,20 @@ void process(Worm *W, int ch)
         current_player++;
     }
 
-    wrefresh(play_area);
+    update_board();
 }
 
 void crash(Worm *W)
 {
-    endwin();
+    terminate_window();
     printf("\nWell, you ran into something and the game is over.\n");
     printf("Your final score was %d\n\n", W->score);
     exit(0);
 }
 
-void update_score(int score)
-{
-    wmove(status_bar, 0, COLS - 12);
-    wprintw(status_bar, "Score: %3d", score);
-    wrefresh(status_bar);
-}
-
 void setup(void)
 {
     /* Revoke setgid privileges */
-    setregid(getgid(), getgid());
-
-    setbuf(stdout, outbuf);
-    srand(getpid());
-    initscr();
-    cbreak();
-    noecho();
-
-#ifdef KEY_LEFT
-    keypad(stdscr, TRUE);
-#endif
-    clear();
-    if (COLS < MIN_WINDOW_WIDTH || LINES < MIN_WINDOW_HEIGHT) {
-        /*
-         * Insufficient room for the line with " Worm" and the
-         * score if fewer than 18 columns; insufficient room for
-         * anything much if fewer than 5 lines.
-         */
-        endwin();
-        errx(1, "screen too small");
-    }
-
-    // Hide cursor
-    curs_set(0);
-
-    // Create the game windows
-    status_bar = newwin(1, WINDOW_WIDTH, 0, 0);
-    scrollok(status_bar, FALSE);
-    wmove(status_bar, 0, 0);
-    wprintw(status_bar, " Worm");
-
-    play_area = newwin(WINDOW_HEIGHT, WINDOW_WIDTH, 1, 0);
-    scrollok(play_area, FALSE);
-    box(play_area, '*', '*');
-
-    refresh();
-    wrefresh(status_bar);
-    wrefresh(play_area);
-
+    setup_window();
     update_score(0);
 }
