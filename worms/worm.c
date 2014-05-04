@@ -78,6 +78,8 @@ int WormMove(Worm *w, int position)
     case KEYBOARD_RIGHT:
         x++;
         break;
+    case KEYBOARD_EXIT:
+        return -1;
     default:
         return 0;
     }

@@ -13,26 +13,15 @@
 #define	MAXLINE	    255
 #define FIFO_PERMS  (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
 
-int current_player = 0;
 
 int main()
 {
-    int server_fifo, fd;
-    char buffer[MAXLINE], client_filename[MAXLINE];
-    int action, status;
-    Worm *p[5];
+    int server_fifo, lenght;
+    char buffer[MAXLINE], filename[MAXLINE];
+    char head, body;
 
     setup_window();
-    fflush(stdout);
-
-    // Create worm
-    p[0] = add_player('@', '#', 80);
-    p[1] = add_player('D', '=', 125);
-    p[2] = add_player('X', '+', 135);
-    p[3] = add_player('O', '-', 75);
-    p[4] = add_player('K', 'o', 145);
-
-    prize();          // Put up a goal
+    prize();
     update_board();
     fflush(stdout);
 
@@ -44,25 +33,52 @@ int main()
 
     server_fifo = open(SERVER_FIFO, O_RDONLY);
 
-    while(current_player < 5){
+    while(1){
         // Block until server FIFO has new data
         while((read(server_fifo, buffer, MAXLINE)) <= 0);
 
-        sscanf(buffer, "%s %d", client_filename, &action);
-        status = process(p[current_player], action);
-        fflush(stdout);
-
-        // Send response to the client
-        fd = open(client_filename, O_WRONLY);
-        write(fd, &status, sizeof(status));
-        close(fd);
+        sscanf(buffer, "%s %c %c %d", filename, &head, &body, &lenght);
+        test(filename, head, body, lenght);
     }
 
-    crash(p[0]);
     close(server_fifo);
 	unlink(SERVER_FIFO);
 
     return 0;
+}
+
+void test(char *filename, char head, char body, int lenght)
+{
+    int key, res, client_fd;
+    Worm *player = add_player(head, body, lenght);
+    update_board();
+
+    // Notify client init result. 0:Success, else:Failure
+    res = (player != NULL) ? 0 : -1;
+    client_fd = open(filename, O_WRONLY);
+    write(client_fd, &res, sizeof(res));
+    close(client_fd);
+
+    while(1){
+        // Block until server FIFO has new data
+        client_fd = open(filename, O_RDONLY);
+        while((read(client_fd, &key, sizeof(key))) <= 0);
+        close(client_fd);
+
+        // Process client input
+        res = process(player, key);
+        fflush(stdout);
+
+        // Send response to the client
+        client_fd = open(filename, O_WRONLY);
+        write(client_fd, &res, sizeof(res));
+        close(client_fd);
+
+        // Player died, no need to continue here
+        if (res < 0){
+            break;
+        }
+    }
 }
 
 Worm *add_player(char head, char body, int initial_size)
@@ -70,7 +86,7 @@ Worm *add_player(char head, char body, int initial_size)
     WormBody pos;
     Worm *p = WormCreate(head, body, initial_size);
     if(p == NULL)
-        err(1, NULL);
+        return NULL;
 
     do {
         newpos(&pos);
@@ -98,15 +114,13 @@ void prize(void)
 
 int process(Worm *W, int ch)
 {
-    int res = W->score; // Head position
-
+    int res;
     ch = WormMove(W, ch);
     res = W->score;
     if (ch > 0) {
         prize();
     } else if (ch < 0) {
         WormDestroy(W);
-        current_player++;
         res = -1;
     }
 
