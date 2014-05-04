@@ -16,7 +16,7 @@
 
 int main()
 {
-    int server_fifo, lenght;
+    int server_fifo, length;
     char buffer[MAXLINE], filename[MAXLINE];
     char head, body;
 
@@ -37,8 +37,8 @@ int main()
         // Block until server FIFO has new data
         while((read(server_fifo, buffer, MAXLINE)) <= 0);
 
-        sscanf(buffer, "%s %c %c %d", filename, &head, &body, &lenght);
-        test(filename, head, body, lenght);
+        sscanf(buffer, "%s %c %c %d", filename, &head, &body, &length);
+        test(filename, head, body, length);
     }
 
     close(server_fifo);
@@ -47,10 +47,10 @@ int main()
     return 0;
 }
 
-void test(char *filename, char head, char body, int lenght)
+void test(char *filename, char head, char body, int length)
 {
     int key, res, client_fd;
-    Worm *player = add_player(head, body, lenght);
+    Worm *player = add_player(head, body, length);
     update_board();
 
     // Notify client init result. 0:Success, else:Failure

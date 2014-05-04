@@ -15,6 +15,6 @@ void  newpos(WormBody *);
 int  process(Worm *, int);
 
 Worm  *add_player(char head, char body, int initial_size);
-void test(char *filename, char head, char body, int lenght);
+void test(char *filename, char head, char body, int length);
 
 #endif

@@ -9,24 +9,24 @@
 #include "utils.h"
 
 #define	MAXLINE	    255
-#define WORM_LENGHT   7
 #define FIFO_PERMS  (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
 
 int main(int argc, char **argv)
 {
     int is_running = 1;
-    int input_char, score, res, n;
     int server_fd, client_fd;
+    int input_char, score, res, p_length;
+    char p_head, p_body;
     char client_filename[MAXLINE], buffer[MAXLINE];
     pid_t pid;
 
-    if (argc == 1){
-        n = WORM_LENGHT;
-    } else if (argc == 2){
-        n = atoi(argv[1]);
-    } else {
-        printf("Bad usage: %s [initial_length]", argv[0]);
+    if (argc != 4){
+        printf("Bad usage: %s <head> <body> <length>\n", argv[0]);
         exit(EXIT_FAILURE);
+    } else {
+        p_head = argv[1][0];
+        p_body = argv[2][0];
+        p_length = atoi(argv[3]);
     }
 
     // Verify server FIFO exists
@@ -43,8 +43,8 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    // Connect with the server <fifoname lenght>
-    sprintf(buffer, "%s @ - %d", client_filename, n);
+    // Connect with the server <fifoname length>
+    sprintf(buffer, "%s %c %c %d", client_filename, p_head, p_body, p_length);
     server_fd = open(SERVER_FIFO, O_WRONLY);
     write(server_fd, buffer, sizeof(buffer));
     close(server_fd);

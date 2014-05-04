@@ -84,7 +84,6 @@ int WormMove(Worm *w, int position)
         return 0;
     }
 
-
     if (w->growing == 0) {
         WormStripTail(w);
     } else {
