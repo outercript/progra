@@ -1,6 +1,8 @@
 #ifndef __WORM__
 #define __WORM__
 
+#define WORM_LENGTH     7
+
 typedef struct body {
     int x;
     int y;
@@ -26,8 +28,7 @@ extern void display(int, int, char);
 extern int chatpos(int, int);
 
 
-void WormInit(Worm *w, WormBody pos);
-Worm *WormCreate(char head, char body, int initial_size);
+Worm *WormCreate(char head, char body, int length, WormBody pos);
 void WormDestroy(Worm *w);
 int WormMove(Worm *w, int position);
 

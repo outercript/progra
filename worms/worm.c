@@ -4,12 +4,13 @@
 #include "worm.h"
 #include "utils.h"
 
+static void WormInit(Worm *w, WormBody pos);
 static void WormStripTail(Worm *w);
 static void WormGrowTail(Worm *w, int x, int y);
 static void WormGrowHead(Worm *w, int x, int y);
 
 
-Worm *WormCreate(char head, char body, int initial_size)
+Worm *WormCreate(char head, char body, int length, WormBody pos)
 {
     Worm* w = calloc(1, sizeof(Worm));
     if (w == NULL)
@@ -17,8 +18,9 @@ Worm *WormCreate(char head, char body, int initial_size)
 
     w->HEAD = head;
     w->BODY = body;
-    w->start_len = initial_size;
+    w->start_len = (length > 0) ? length: WORM_LENGTH;
 
+    WormInit(w, pos);
     return w;
 }
 

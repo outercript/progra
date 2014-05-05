@@ -132,9 +132,11 @@ void update_score(int score)
     wmove(status_bar, 0, COLS - 12);
     wprintw(status_bar, "Score: %3d", score);
     wrefresh(status_bar);
+    fflush(stdout);
 }
 
 void update_board(void)
 {
     wrefresh(play_area);
+    fflush(stdout);
 }
