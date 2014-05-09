@@ -18,7 +18,7 @@ Worm *WormCreate(char head, char body, int length, WormBody pos)
 
     w->HEAD = head;
     w->BODY = body;
-    w->start_len = (length > 0) ? length: WORM_LENGTH;
+    w->growing = (length > 0) ? length: WORM_LENGTH;
 
     WormInit(w, pos);
     return w;
@@ -40,7 +40,7 @@ void WormInit(Worm *w, WormBody pos)
     int i;
     WormGrowHead(w, pos.x, pos.y);
 
-    for (i = 0, w->tail = w->head; i < w->start_len; i++) {
+    for (w->tail = w->head; w->growing > 0; w->growing--) {
         pos.x = w->tail->x;
         pos.y = w->tail->y;
 
